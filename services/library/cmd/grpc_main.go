@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"google.golang.org/grpc"
 	"library/internal/config"
 	"library/internal/delivery"
 	"library/internal/repo"
@@ -12,10 +10,13 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"google.golang.org/grpc"
 )
 
 const (
-	grpcPort = "50051"
+	grpcPort = "8060"
 )
 
 func main() {

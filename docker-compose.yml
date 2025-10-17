@@ -13,9 +13,9 @@ services:
       - rating
       - reservation
     environment:
-      - LIB_SERVICE_URL=library:50051
-      - RATING_SERVICE_URL=rating:50053
-      - RESERVATION_SERVICE_URL=reservation:50052
+      - LIB_SERVICE_URL=library:8060
+      - RATING_SERVICE_URL=rating:8050
+      - RESERVATION_SERVICE_URL=reservation:8070
 
   library:
     hostname: library
@@ -23,7 +23,7 @@ services:
       context: ./services/library
       dockerfile: Dockerfile
     ports:
-      - "50051:50051"
+      - "8060:8060"
 
   reservation:
     hostname: reservation
@@ -31,7 +31,7 @@ services:
       context: ./services/reservation
       dockerfile: Dockerfile
     ports:
-      - "50052:50052"
+      - "8070:8070"
 
   rating:
     hostname: rating
@@ -39,4 +39,4 @@ services:
       context: ./services/rating
       dockerfile: Dockerfile
     ports:
-      - "50053:50053"
+      - "8050:8050"

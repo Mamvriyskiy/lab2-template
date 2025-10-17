@@ -6,11 +6,12 @@ import (
 	"gateway/internal/delivery"
 	"gateway/internal/usecase"
 	"gateway/middleware"
-	"github.com/gorilla/mux"
-	"google.golang.org/grpc"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -21,9 +22,9 @@ func main() {
 }
 func run() error {
 	r := mux.NewRouter()
-	//os.Setenv("LIB_SERVICE_URL", "127.0.0.1:50051")
-	//os.Setenv("RATING_SERVICE_URL", "127.0.0.1:50053")
-	//os.Setenv("RESERVATION_SERVICE_URL", "127.0.0.1:50052")
+	//os.Setenv("LIB_SERVICE_URL", "127.0.0.1:8060")
+	//os.Setenv("RATING_SERVICE_URL", "127.0.0.1:8050")
+	//os.Setenv("RESERVATION_SERVICE_URL", "127.0.0.1:8070")
 
 	log.Printf("lib: %s", os.Getenv("LIB_SERVICE_URL"))
 	log.Printf("rating: %s", os.Getenv("RATING_SERVICE_URL"))

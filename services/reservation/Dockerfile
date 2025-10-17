@@ -9,7 +9,7 @@ RUN go mod tidy
 
 COPY . .
 
-EXPOSE 50052
+EXPOSE 8070
 
 RUN go build -o reservation ./cmd/grpc_main.go
 

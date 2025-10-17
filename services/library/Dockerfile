@@ -10,7 +10,7 @@ RUN go mod tidy
 
 COPY . .
 
-EXPOSE 50051
+EXPOSE 8060
 
 RUN go build -o library ./cmd/grpc_main.go
 

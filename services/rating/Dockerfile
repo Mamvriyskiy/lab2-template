@@ -9,7 +9,7 @@ RUN go mod tidy
 
 COPY . .
 
-EXPOSE 50053
+EXPOSE 8050
 
 RUN go build -o rating ./cmd/grpc_main.go
 
