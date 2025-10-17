@@ -1,11 +1,14 @@
 version: "3"
+
 services:
   gateway:
     hostname: gateway
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
     ports:
-      - 8080:8080
-    image: vr009/gateway
-    links:
+      - "8080:8080"
+    depends_on:
       - library
       - rating
       - reservation
@@ -17,20 +20,23 @@ services:
   library:
     hostname: library
     build:
-      context: .
-      dockerfile: ./services/library/.
+      context: ./services/library
+      dockerfile: Dockerfile
     ports:
-      - 50051:50051
-    image: vr009/library
+      - "50051:50051"
 
   reservation:
     hostname: reservation
+    build:
+      context: ./services/reservation
+      dockerfile: Dockerfile
     ports:
-      - 50052:50052
-    image: vr009/reservation:latest
+      - "50052:50052"
 
   rating:
     hostname: rating
+    build:
+      context: ./services/rating
+      dockerfile: Dockerfile
     ports:
-      - 50053:50053
-    image: vr009/rating:latest
+      - "50053:50053"
