@@ -5,7 +5,7 @@ ENV GO111MODULE=on
 
 WORKDIR /opt/app
 
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod tidy
 
 COPY . .
