@@ -5,6 +5,8 @@ ENV GO111MODULE=on
 
 WORKDIR /opt/app
 
+COPY go.mod ./
+
 COPY . .
 
 EXPOSE 50051
