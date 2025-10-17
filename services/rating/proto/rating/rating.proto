@@ -1,0 +1,32 @@
+syntax = "proto3";
+package rating;
+option go_package = "lib/services/proto/rating";
+import "google/protobuf/timestamp.proto";
+
+service RatingService {
+
+  // Список библиотек в городе
+  rpc GetRating (RatingRequest) returns (RatingResponse);
+  // изменить рейтинг
+  rpc RatingUpdate(RatingUpdateRequest) returns (RatingUpdateResponse);
+}
+
+message RatingUpdateRequest {
+  string name = 1;
+  int32 add = 2;
+}
+
+message RatingUpdateResponse {
+  bool ok = 1;
+}
+
+// Сообщение с деталями запроса по библиотекам
+message RatingRequest {
+  string name = 1;
+}
+
+// Сообщение с деталями запроса по книгам
+message RatingResponse {
+  int32 stars = 1;
+}
+

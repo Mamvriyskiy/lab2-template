@@ -1,0 +1,100 @@
+syntax = "proto3";
+package library;
+
+option go_package = "lib/services/proto/library";
+import "google/protobuf/timestamp.proto";
+
+service LibraryService {
+
+  // Список библиотек в городе
+  rpc FetchLibs (LibraryRequest) returns (LibraryResponse);
+
+  // Список книг в библиотеке
+  rpc FetchBooks (BookRequest) returns (BookResponse);
+
+  // Получить либу по id
+  rpc GetLibrary(GetOneLibRequest) returns (ItemLibrary);
+
+  // Получить книгу по id
+  rpc GetBook(GetOneBookRequest) returns (ItemBook);
+
+  rpc UpdateBookCount(UpdateBookCountRequest) returns(UpdateBookCountResponse);
+}
+
+message UpdateBookCountRequest {
+  string bookUid = 1;
+  int32 num = 2;
+}
+
+message UpdateBookCountResponse {
+  bool ok = 1;
+}
+
+message GetOneLibRequest {
+  string libUid = 1;
+}
+
+message GetOneBookRequest {
+  string bookUid = 1;
+}
+
+// Сообщение с деталями запроса по библиотекам
+message LibraryRequest {
+  int64 page = 1;
+  int64 size = 2;
+  string city = 3;
+}
+
+// Сообщение с деталями запроса по книгам
+message BookRequest {
+  int64 page = 1;
+  int64 size = 2;
+  bool showAll = 3;
+  string libraryUid = 4;
+}
+
+message ItemLibrary {
+  string libraryUid = 1;
+  string name = 2;
+  string address = 3;
+  string city = 4;
+}
+
+message ItemBook {
+  string bookUid = 1;
+  string name = 2;
+  string author = 3;
+  string genre = 4;
+  enum Condition {
+    EXCELLENT = 0;
+    GOOD = 1;
+    BAD = 2;
+  }
+  Condition condition = 5;
+  int32 availableCount = 6;
+}
+
+message LibraryResponseItem {
+  int64 page = 1;
+  int64 size = 2;
+  int64 totalElements = 3;
+  repeated ItemLibrary item = 4;
+}
+
+message BookResponseItem {
+  int64 page = 1;
+  int64 size = 2;
+  int64 totalElements = 3;
+  repeated ItemBook item = 4;
+}
+
+// Ответ на получение библиотеки
+message LibraryResponse {
+  repeated LibraryResponseItem items = 1;
+}
+
+// Ответ на получение книги
+message BookResponse {
+  repeated BookResponseItem items = 1;
+}
+

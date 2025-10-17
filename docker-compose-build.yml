@@ -2,9 +2,9 @@ version: "3"
 services:
   gateway:
     hostname: gateway
+    build: ./services/gateway/.
     ports:
       - 8080:8080
-    image: vr009/gateway
     links:
       - library
       - rating
@@ -13,24 +13,24 @@ services:
       - LIB_SERVICE_URL=library:50051
       - RATING_SERVICE_URL=rating:50053
       - RESERVATION_SERVICE_URL=reservation:50052
+    image: vr009/gateway
 
   library:
     hostname: library
-    build:
-      context: .
-      dockerfile: ./services/library/.
+    build: ./services/library/.
     ports:
       - 50051:50051
     image: vr009/library
 
   reservation:
     hostname: reservation
+    build: ./services/reservation/.
     ports:
       - 50052:50052
-    image: vr009/reservation:latest
+    image: vr009/reservation
 
   rating:
-    hostname: rating
+    build: ./services/rating/.
     ports:
       - 50053:50053
-    image: vr009/rating:latest
+    image: vr009/rating
