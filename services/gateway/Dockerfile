@@ -8,13 +8,12 @@ ENV GO111MODULE=on
 
 WORKDIR /opt/app
 
-COPY go.mod go.sum ./
+COPY go.mod ./
+RUN go mod tidy
 
 COPY . .
 
 EXPOSE 8080
-
-RUN go mod tidy
 
 RUN go build -o gateway ./cmd/main.go
 

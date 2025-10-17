@@ -5,12 +5,11 @@ ENV GO111MODULE=on
 WORKDIR /opt/app
 
 COPY go.mod ./
+RUN go mod tidy
 
 COPY . .
 
 EXPOSE 50053
-
-RUN go mod tidy
 
 RUN go build -o rating ./cmd/grpc_main.go
 
