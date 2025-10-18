@@ -154,21 +154,36 @@ func buy_ticket(w http.ResponseWriter, r *http.Request) {
 }
 
 func echo_request(w http.ResponseWriter, r *http.Request, service_url string) {
-	req, _ := http.NewRequest(r.Method, service_url+r.URL.String(), r.Body)
-	fmt.Println(r.Method)
-	req.Header = r.Header
+	Logger.GetLogger().Printf("Proxying to: %s%s", service_url, r.URL.String())
+	
+	req, err := http.NewRequestWithContext(r.Context(), r.Method, service_url+r.URL.String(), r.Body)
+	if err != nil {
+		Logger.GetLogger().Printf("Error creating request: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	
+	req.Header = r.Header.Clone()
 	response, err := GetDefaultClient().Do(req)
 
 	if err != nil {
 		Logger.GetLogger().Print(err)
 		w.WriteHeader(http.StatusNotFound)
 	} else {
+		defer response.Body.Close()
+		
+		// Копируем все заголовки КРОМЕ Content-Type
 		for key, values := range response.Header {
-			for _, value := range values {
-				w.Header().Add(key, value)
+			if key != "Content-Type" { // Не копируем исходный Content-Type
+				for _, value := range values {
+					w.Header().Add(key, value)
+				}
 			}
 		}
 
+		// Форсируем application/json для API endpoints
+		w.Header().Set("Content-Type", "application/json")
+		
 		w.WriteHeader(response.StatusCode)
 		io.Copy(w, response.Body)
 	}
