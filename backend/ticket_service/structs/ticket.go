@@ -2,7 +2,7 @@ package TS_structs
 
 type Ticket struct {
 	ID           int64  `json:"id"`
-	TicketUid    string `json:"ticket_uuid"`
+	TicketUid    string `json:"ticketUid"`
 	Username     string `json:"username"`
 	FlightNumber string `json:"flight_number"`
 	Price        int64  `json:"price"`

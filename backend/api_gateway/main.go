@@ -21,12 +21,12 @@ func main() {
 
 	router.HandleFunc("/manage/health", http_utils.HealthCkeck).Methods("GET")
 	router.HandleFunc("/api/v1/flights", flight_proxy).Methods("GET")
-	router.HandleFunc("/api/v1/me", bonus_proxy).Methods("GET")
 	router.HandleFunc("/api/v1/tickets/{ticketUid}", ticket_proxy).Methods("GET")
 	router.HandleFunc("/api/v1/tickets", ticket_proxy).Methods("GET")
 	router.HandleFunc("/api/v1/tickets/{ticketUid}", ticket_proxy).Methods("DELETE")
 	router.HandleFunc("/api/v1/tickets", ticket_proxy).Methods("Post")
 	router.HandleFunc("/api/v1/privilege", bonus_proxy).Methods("GET")
+	router.HandleFunc("/api/v1/me", meHandler).Methods("GET")
 
 	router.HandleFunc("/api/v1/tickets", buy_ticket).Methods("POST")
 
@@ -200,3 +200,51 @@ func flight_proxy(w http.ResponseWriter, r *http.Request) {
 func ticket_proxy(w http.ResponseWriter, r *http.Request) {
     echo_request(w, r, "http://ticket_service:8070")
 }
+
+func meHandler(w http.ResponseWriter, r *http.Request) {
+    client := &http.Client{}
+
+    // --- Получаем билеты ---
+    ticketsReq, _ := http.NewRequest("GET", "http://ticket_service:8070/api/v1/tickets", nil)
+    ticketsReq.Header = r.Header // проксируем X-User-Name и другие заголовки
+    ticketsResp, err := client.Do(ticketsReq)
+    if err != nil {
+        http.Error(w, "Error fetching tickets", http.StatusInternalServerError)
+        return
+    }
+    defer ticketsResp.Body.Close()
+
+    ticketsBody, _ := io.ReadAll(ticketsResp.Body)
+    var tickets []map[string]interface{}
+    if err := json.Unmarshal(ticketsBody, &tickets); err != nil {
+        http.Error(w, "Error parsing tickets response", http.StatusInternalServerError)
+        return
+    }
+
+    // --- Получаем привилегии ---
+    bonusReq, _ := http.NewRequest("GET", "http://privilege-service:8050/api/v1/privilege", nil)
+    bonusReq.Header = r.Header
+    bonusResp, err := client.Do(bonusReq)
+    if err != nil {
+        http.Error(w, "Error fetching privilege", http.StatusInternalServerError)
+        return
+    }
+    defer bonusResp.Body.Close()
+
+    bonusBody, _ := io.ReadAll(bonusResp.Body)
+    var privilege map[string]interface{}
+    if err := json.Unmarshal(bonusBody, &privilege); err != nil {
+        http.Error(w, "Error parsing privilege response", http.StatusInternalServerError)
+        return
+    }
+
+    // --- Формируем объединённый ответ ---
+    response := map[string]interface{}{
+        "tickets":   tickets,
+        "privilege": map[string]interface{}{"balance": privilege["balance"], "status": privilege["status"]},
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
+}
+
