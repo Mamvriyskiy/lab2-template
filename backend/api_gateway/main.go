@@ -24,7 +24,7 @@ func main() {
 	router.HandleFunc("/api/v1/tickets/{ticketUid}", ticket_proxy).Methods("GET")
 	router.HandleFunc("/api/v1/tickets", ticket_proxy).Methods("GET")
 	router.HandleFunc("/api/v1/tickets/{ticketUid}", ticket_proxy).Methods("DELETE")
-	router.HandleFunc("/api/v1/tickets", ticket_proxy).Methods("Post")
+	// router.HandleFunc("/api/v1/tickets", ticket_proxy).Methods("Post")
 	router.HandleFunc("/api/v1/privilege", bonus_proxy).Methods("GET")
 	router.HandleFunc("/api/v1/me", meHandler).Methods("GET")
 
@@ -44,7 +44,7 @@ func GetDefaultClient() *http.Client {
 }
 
 func check_flght_number(flight_number string) bool {
-	req, _ := http.NewRequest("GET", "http://localhost:8060/api/v1/flights", nil)
+	req, _ := http.NewRequest("GET", "http://flight_service:8060/api/v1/flights", nil)
 	r, err := GetDefaultClient().Do(req)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func buy_ticket_in_ticket_service(username string, buy_ticket_info DTO.BuyTicket
 	body, _ := json.Marshal(buy_ticket_info)
 	reader := strings.NewReader(string(body))
 
-	req, err := http.NewRequest("POST", "http://localhost:8070/api/v1/tickets", reader)
+	req, err := http.NewRequest("POST", "http://ticket_service:8070/api/v1/tickets", reader)
 	req.Header.Add("X-User-Name", username)
 
 	if err != nil {
@@ -104,7 +104,7 @@ func buy_ticket_in_privilege_service(username string, buy_ticket_info DTO.BuyTic
 	body, _ := json.Marshal(buy_ticket_info)
 	reader := strings.NewReader(string(body))
 
-	req, err := http.NewRequest("POST", "http://localhost:8050/api/v1/tickets", reader)
+	req, err := http.NewRequest("POST", "http://privilege-service:8050/api/v1/tickets", reader)
 	req.Header.Add("X-User-Name", username)
 
 	if err != nil {
@@ -128,30 +128,87 @@ func buy_ticket_in_privilege_service(username string, buy_ticket_info DTO.BuyTic
 }
 
 func buy_ticket(w http.ResponseWriter, r *http.Request) {
+	print("aaaaaaaaaaa")
 	username := r.Header.Get("X-User-Name")
 
-	buy_ticket_info := DTO.BuyTicketDTO{}
-	http_utils.ReadSerializable(r, &buy_ticket_info)
-
-	if !check_flght_number(buy_ticket_info.FlightNumber) {
-		w.WriteHeader(http.StatusNotFound)
-	}
-
-	ticket, err := buy_ticket_in_ticket_service(username, buy_ticket_info)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	buy_ticket_info.TicketUid = ticket.TicketUid
-
-	err = buy_ticket_in_privilege_service(username, buy_ticket_info)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+	var buyTicketInfo DTO.BuyTicketDTO
+	if err := http_utils.ReadSerializable(r, &buyTicketInfo); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	if !check_flght_number(buyTicketInfo.FlightNumber) {
+		http.Error(w, "flight not found", http.StatusNotFound)
+		return
+	}
+
+	ticket, err := buy_ticket_in_ticket_service(username, buyTicketInfo)
+	if err != nil {
+		http.Error(w, "failed to buy ticket", http.StatusInternalServerError)
+		return
+	}
+	buyTicketInfo.TicketUid = ticket.TicketUid
+
+	err = buy_ticket_in_privilege_service(username, buyTicketInfo)
+	if err != nil {
+		http.Error(w, "failed to update privilege", http.StatusInternalServerError)
+		return
+	}
+
+	client := &http.Client{}
+	bonusReq, _ := http.NewRequest("GET", "http://privilege-service:8050/api/v1/privilege", nil)
+	bonusReq.Header = r.Header
+
+	bonusResp, err := client.Do(bonusReq)
+	if err != nil {
+		http.Error(w, "Error fetching privilege", http.StatusInternalServerError)
+		return
+	}
+	defer bonusResp.Body.Close()
+
+	if bonusResp.StatusCode != http.StatusOK {
+		http.Error(w, "failed to get privilege", bonusResp.StatusCode)
+		return
+	}
+
+	var privilege struct {
+		Balance int    `json:"balance"`
+		Status  string `json:"status"`
+	}
+	if err := json.NewDecoder(bonusResp.Body).Decode(&privilege); err != nil {
+		http.Error(w, "invalid privilege response", http.StatusInternalServerError)
+		return
+	}
+
+	flight, err := getFlightByNumber(buyTicketInfo.FlightNumber)
+	if err != nil {
+		http.Error(w, "flight not found", http.StatusNotFound)
+		return
+	}
+
+	// loc, _ := time.LoadLocation("Europe/Moscow")
+	print("bbbbbbbbb")
+	response := map[string]interface{}{
+		"ticketUid":     ticket.TicketUid,
+		"flightNumber":  flight.FlightNumber,
+		"fromAirport":   flight.FromAirport,
+		"toAirport":     flight.ToAirport,
+		"date":          flight.Date,
+		"price":         flight.Price,
+		"paidByMoney":   flight.Price,
+		"paidByBonuses": 0,
+		"status":        "PAID",
+		"privilege": map[string]interface{}{
+			"balance": privilege.Balance,
+			"status":  privilege.Status,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }
+
 
 func echo_request(w http.ResponseWriter, r *http.Request, service_url string) {
 	Logger.GetLogger().Printf("Proxying to: %s%s", service_url, r.URL.String())
@@ -246,5 +303,46 @@ func meHandler(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(response)
+}
+
+type FlightShort struct {
+	FlightNumber string `json:"flightNumber"`
+	FromAirport  string `json:"fromAirport"`
+	ToAirport    string `json:"toAirport"`
+	Date         string `json:"date"`
+	Price        int    `json:"price"`
+}
+
+func getFlightByNumber(flightNumber string) (FlightShort, error) {
+	// Формируем запрос к flight_service
+	req, _ := http.NewRequest("GET", "http://flight_service:8060/api/v1/flights", nil)
+	q := req.URL.Query()
+	q.Add("flightNumber", flightNumber)
+	req.URL.RawQuery = q.Encode()
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return FlightShort{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return FlightShort{}, fmt.Errorf("flight not found")
+	}
+
+	// Структура, соответствующая JSON ответа flight_service
+	var result struct {
+		Items []FlightShort `json:"items"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return FlightShort{}, err
+	}
+
+	if len(result.Items) == 0 {
+		return FlightShort{}, fmt.Errorf("flight not found")
+	}
+
+	return result.Items[0], nil
 }
 

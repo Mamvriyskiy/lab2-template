@@ -6,7 +6,7 @@ import (
 	"time"
 	"os"
 
-	FS_structs "github.com/lapayka/rsoi-2/flight_service/Structs"
+	// FS_structs "github.com/lapayka/rsoi-2/flight_service/Structs"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -82,22 +82,37 @@ type joinRes struct {
 	ToAirportCountry string
 }
 
-func (d *DB) GetFlights() (FS_structs.Flights, error) {
-	flights := FS_structs.Flights{}
+type FlightShort struct {
+	FlightNumber string `json:"flightNumber"`
+	FromAirport  string `json:"fromAirport"`
+	ToAirport    string `json:"toAirport"`
+	Date         string `json:"date"`
+	Price        int    `json:"price"`
+}
 
-	joinres := []joinRes{}
-	d.db.Table("flight").Select("flight.id, flight.flight_number, flight.datetime as date, fa.id as From_Airport_ID, fa.name as From_Airport_Name, fa.city as From_Airport_City, fa.country as From_Airport_Country, ta.id as To_Airport_ID, ta.name as To_Airport_Name, ta.city as To_Airport_City, ta.country as To_Airport_Country").
+func (d *DB) GetFlights() ([]FlightShort, error) {
+	results := []joinRes{}
+	if err := d.db.Table("flight").
+		Select("flight.id, flight.flight_number, flight.datetime as date, fa.name as from_airport_name, fa.city as from_airport_city, ta.name as to_airport_name, ta.city as to_airport_city").
 		Joins("JOIN airport fa on flight.from_airport_id = fa.id").
 		Joins("JOIN airport ta on flight.to_airport_id = ta.id").
-		Scan(&joinres)
-
-	for _, res := range joinres {
-		flights = append(flights, FS_structs.Flight{ID: res.ID, FlightNumber: res.FlightNumber, Date: res.Date, FromAirport: FS_structs.Airport{ID: res.FromAirportID, Name: res.FromAirportName, City: res.FromAirportCity, Country: res.FromAirportCountry}, ToAirport: FS_structs.Airport{ID: res.ToAirportID, Name: res.ToAirportName, City: res.ToAirportCity, Country: res.ToAirportCountry}})
+		Scan(&results).Error; err != nil {
+		return nil, err
 	}
 
-	if len(flights) == 0 {
-		return nil, nil
+	loc, _ := time.LoadLocation("Europe/Moscow")
+
+	flights := make([]FlightShort, 0, len(results))
+	for _, r := range results {
+		flights = append(flights, FlightShort{
+			FlightNumber: r.FlightNumber,
+			FromAirport:  fmt.Sprintf("%s %s", r.FromAirportCity, r.FromAirportName),
+			ToAirport:    fmt.Sprintf("%s %s", r.ToAirportCity, r.ToAirportName),
+			Date:         r.Date.In(loc).Format("2006-01-02 15:04"),
+			Price:        1500,
+		})
 	}
 
 	return flights, nil
 }
+

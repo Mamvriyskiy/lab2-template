@@ -29,6 +29,14 @@ func main() {
 	}
 }
 
+type FlightShort struct {
+	FlightNumber string `json:"flightNumber"`
+	FromAirport  string `json:"fromAirport"`
+	ToAirport    string `json:"toAirport"`
+	Date         string `json:"date"`
+	Price        int    `json:"price"`
+}
+
 func (gw *GateWay) getFlights(w http.ResponseWriter, r *http.Request) {
 	flights, _ := gw.db.GetFlights()
 
@@ -39,10 +47,10 @@ func (gw *GateWay) getFlights(w http.ResponseWriter, r *http.Request) {
 
 	// Формируем объект ответа
 	response := map[string]interface{}{
-		"items":        flights,
 		"page":         1,
 		"pageSize":     len(flights),
 		"totalElements": len(flights),
+		"items":        flights,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
