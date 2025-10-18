@@ -65,7 +65,14 @@ func New(host, user, db_name, password string) (*DB, error) {
 	return &DB{db: db}, nil
 }
 
-func (db *DB) GetPrivilegeAndHistoryByUserName(username string) (PS_structs.Privilege_with_history, error) {
+type PrivilegeResponse struct {
+	Balance int64                 `json:"balance"`
+	Status  string                `json:"status"`
+	History []PS_structs.Privilege_history   `json:"history"`
+}
+
+
+func (db *DB) GetPrivilegeAndHistoryByUserName(username string) (PrivilegeResponse, error) {
 	p := PS_structs.Privilege{Username: username}
 
 	tx := db.db.Begin()
@@ -74,7 +81,7 @@ func (db *DB) GetPrivilegeAndHistoryByUserName(username string) (PS_structs.Priv
 
 	if err != nil {
 		tx.Rollback()
-		return PS_structs.Privilege_with_history{}, nil
+		return PrivilegeResponse{}, nil
 	}
 
 	transactions := PS_structs.Privileges_history{}
@@ -83,12 +90,17 @@ func (db *DB) GetPrivilegeAndHistoryByUserName(username string) (PS_structs.Priv
 
 	if err != nil {
 		tx.Rollback()
-		return PS_structs.Privilege_with_history{Privilege_info: p}, nil
+		return PrivilegeResponse{}, nil
 	}
 
 	tx.Commit()
 
-	return PS_structs.Privilege_with_history{Privilege_info: p, History: transactions}, err
+	// return PS_structs.Privilege_with_history{Privilege_info: p, History: transactions}, err
+	return PrivilegeResponse{
+		Balance: p.Balance,
+		Status:  p.Status,
+		History: transactions,
+	}, nil
 }
 
 func (db *DB) CreateTicket(username string, price int64, is_paid_from_balance bool, privelege_item PS_structs.Privilege_history) error {

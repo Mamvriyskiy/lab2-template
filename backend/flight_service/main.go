@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"encoding/json"
 
 	"github.com/gorilla/mux"
 	http_utils "github.com/lapayka/rsoi-2/Common/HTTP_Utils"
@@ -33,8 +34,21 @@ func (gw *GateWay) getFlights(w http.ResponseWriter, r *http.Request) {
 
 	if len(flights) == 0 {
 		w.WriteHeader(http.StatusNotFound)
-	} else {
-		http_utils.WriteSerializable(flights, w)
-		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Формируем объект ответа
+	response := map[string]interface{}{
+		"items":        flights,
+		"page":         1,
+		"pageSize":     len(flights),
+		"totalElements": len(flights),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
