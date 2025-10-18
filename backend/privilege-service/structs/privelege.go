@@ -14,7 +14,7 @@ type Privilege struct {
 type Privilege_history struct {
 	ID            int64     `json:"id"`
 	PrivilegeID   int64     `json:"Privilege_id"`
-	TicketUID     string    `json:"ticket_uid"`
+	TicketUID     string    `json:"ticketUid"`
 	DateTime      time.Time `json:"datetime" gorm:"column:datetime"`
 	BalanceDiff   int64     `json:"balance_diff"`
 	OperationType string    `json:"operation_type"`
