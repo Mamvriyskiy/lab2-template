@@ -24,9 +24,9 @@ func main() {
 	gw := GateWay{db}
 
 	router.HandleFunc("/manage/health", http_utils.HealthCkeck).Methods("Get")
-	router.HandleFunc("/api/v1/me", gw.getPrivilegeAndHistory).Methods("Get")
+	router.HandleFunc("/api/v1/privilege", gw.getPrivilegeAndHistory).Methods("Get")
 	//router.HandleFunc("/api/v1/tickets", gw.getHistory).Methods("Get")
-	router.HandleFunc("/api/v1/tickets", gw.buyTicket).Methods("Post")
+	// router.HandleFunc("/api/v1/tickets", gw.buyTicket).Methods("Post")
 
 	err := http.ListenAndServe(":8050", router)
 	if err != nil {
