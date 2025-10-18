@@ -173,13 +173,13 @@ func echo_request(w http.ResponseWriter, r *http.Request, service_url string) {
 }
 
 func bonus_proxy(w http.ResponseWriter, r *http.Request) {
-	echo_request(w, r, "http://localhost:8050")
+    echo_request(w, r, "http://privilege-service:8050")
 }
 
 func flight_proxy(w http.ResponseWriter, r *http.Request) {
-	echo_request(w, r, "http://localhost:8060")
+    echo_request(w, r, "http://flight_service:8060")
 }
 
 func ticket_proxy(w http.ResponseWriter, r *http.Request) {
-	echo_request(w, r, "http://localhost:8070")
+    echo_request(w, r, "http://ticket_service:8070")
 }
