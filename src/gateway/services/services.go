@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/Mamvriyskiy/lab1-template/person/model"
-	"github.com/Mamvriyskiy/lab1-template/person/repository"
+	"github.com/!mamvriyskiy/lab1-template/person/model"
+	"github.com/!mamvriyskiy/lab1-template/person/repository"
 )
 
 type Persons interface {
@@ -17,9 +17,8 @@ type Services struct {
 	Persons
 }
 
-func NewServices(repo * repository.Repository) *Services {
+func NewServices(repo *repository.Repository) *Services {
 	return &Services{
 		Persons: NewPersonsService(),
 	}
 }
-

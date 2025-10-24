@@ -1,9 +1,6 @@
 package services
 
-import (
-	"github.com/Mamvriyskiy/lab1-template/person/model"
-	"github.com/Mamvriyskiy/lab1-template/person/repository"
-)
+import "github.com/!mamvriyskiy/lab2-template/src/ticket/repository"
 
 type TicketService struct {
 	repo repository.RepoTicket
@@ -12,4 +9,3 @@ type TicketService struct {
 func NewTicketService(repo repository.RepoTicket) *TicketService {
 	return &TicketService{repo: repo}
 }
-

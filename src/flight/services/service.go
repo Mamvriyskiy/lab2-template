@@ -1,9 +1,6 @@
 package services
 
-import (
-	"github.com/Mamvriyskiy/lab1-template/person/model"
-	"github.com/Mamvriyskiy/lab1-template/person/repository"
-)
+import "github.com/!mamvriyskiy/lab2-template/src/flight/repository"
 
 type FlightService struct {
 	repo repository.RepoFlight
@@ -12,4 +9,3 @@ type FlightService struct {
 func NewFlightService(repo repository.RepoFlight) *FlightService {
 	return &FlightService{repo: repo}
 }
-

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	handler "github.com/Mamvriyskiy/lab2-template/src/gateway/handler"
-	services "github.com/Mamvriyskiy/lab2-template/src/gateway/services"
+	handler "github.com/Mamvriyskiy/lab2-template/src/flight/handler"
+	services "github.com/Mamvriyskiy/lab2-template/src/flight/services"
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
 )
 
@@ -20,20 +20,17 @@ func initConfig() error {
 }
 
 func main() {
-	if err := initConfig(); err != nil {
-		return
-	}
-
 	db, err := repo.NewPostgresDB(&repo.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		Username: os.Getenv("DB_USERNAME"),
 		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSLMODE"),
 	})
 
 	if err != nil {
+		logger.Fatal("Error connect db:", zap.Error(err))
 		return
 	}
 
@@ -43,6 +40,7 @@ func main() {
 
 	srv := new(server.Server)
 	if err := srv.Run("8080", handlers.InitRouters()); err != nil {
+		logger.Fatal("Error occurred while running http server:", zap.Error(err))
 		return
 	}
 }

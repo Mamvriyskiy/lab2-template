@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/jmoiron/sqlx"
-	// "github.com/Mamvriyskiy/lab1-template/person/model"
+	//
 )
 
 type RepoTicket interface {

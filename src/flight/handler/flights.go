@@ -6,6 +6,6 @@ import (
 
 
 func (h *Handler) GetInfoAboutFlight(c *gin.Context) {
-
+	print("+")
 }
 
