@@ -41,3 +41,8 @@ type Ticket struct {
     Price        int    `json:"price"`
     Status       string `json:"status"`
 }
+
+type PrivilegeResponse struct {
+	Balance int           `json:"balance"`
+	Status  string        `json:"status"`
+}

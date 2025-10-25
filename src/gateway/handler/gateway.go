@@ -117,7 +117,7 @@ func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 
 	// 1️⃣ Получаем все билеты пользователя
 	headers := map[string]string{"X-User-Name": username}
-	status, body, respHeaders, err := forwardRequest(c, "GET", "http://localhost:8070/tickets", headers)
+	status, body, respHeaders, err := forwardRequest(c, "GET", "http://ticket:8070/tickets", headers)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 		return
@@ -133,14 +133,13 @@ func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 		return
 	}
 
-	print(tickets)
 	// 2️⃣ Проходим по каждому билету и запрашиваем информацию о рейсе
 	var ticketInfos []modelGateway.TicketInfo
 	for _, ticket := range tickets {
 		if ticket.FlightNumber == "" {
 			continue
 		}
-		flightURL := "http://localhost:8060/flight/" + ticket.FlightNumber
+		flightURL := "http://flight:8060/flight/" + ticket.FlightNumber
 		flightStatus, flightBody, _, err := forwardRequest(c, "GET", flightURL, nil)
 		if err != nil {
 			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
@@ -158,7 +157,6 @@ func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 			return
 		}
 
-		print(flight.FlightNumber)
 		// 3️⃣ Объединяем данные билета и рейса
 		ticketInfos = append(ticketInfos, modelGateway.TicketInfo{
 			TicketUID:    ticket.TicketUID,
@@ -192,8 +190,93 @@ func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
 	c.Data(status, respHeaders.Get("Content-Type"), body)
 }
 
-func (h *Handler) GetInfoAboutUser(c *gin.Context) {
+type CombinedResponse struct {
+	Tickets   []modelGateway.TicketInfo `json:"tickets"`
+	Privilege struct {
+		Balance string `json:"balance"`
+		Status  string `json:"status"`
+	} `json:"privilege"`
+}
 
+func (h *Handler) GetInfoAboutUser(c *gin.Context) {
+	username := c.GetHeader("X-User-Name")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "X-User-Name header is required"})
+		return
+	}
+
+	// 1️⃣ Получаем все билеты пользователя
+	headers := map[string]string{"X-User-Name": username}
+	status, body, respHeaders, err := forwardRequest(c, "GET", "http://ticket:8070/tickets", headers)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+	if status != http.StatusOK {
+		c.Data(status, respHeaders.Get("Content-Type"), body)
+		return
+	}
+
+	var tickets []modelGateway.Ticket
+	if err := json.Unmarshal(body, &tickets); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse tickets"})
+		return
+	}
+
+	// 2️⃣ Проходим по каждому билету и запрашиваем информацию о рейсе
+	var ticketInfos []modelGateway.TicketInfo
+	for _, ticket := range tickets {
+		if ticket.FlightNumber == "" {
+			continue
+		}
+		flightURL := "http://flight:8060/flight/" + ticket.FlightNumber
+		flightStatus, flightBody, _, err := forwardRequest(c, "GET", flightURL, nil)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+			return
+		}
+
+		if flightStatus != http.StatusOK {
+			c.Data(flightStatus, "application/json", flightBody)
+			return
+		}
+
+		var flight modelGateway.Flight
+		if err := json.Unmarshal(flightBody, &flight); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse flight response"})
+			return
+		}
+
+		// 3️⃣ Объединяем данные билета и рейса
+		ticketInfos = append(ticketInfos, modelGateway.TicketInfo{
+			TicketUID:    ticket.TicketUID,
+			FlightNumber: flight.FlightNumber,
+			FromAirport:  flight.FromAirport,
+			ToAirport:    flight.ToAirport,
+			Date:         flight.Datetime,
+			Price:        flight.Price,
+			Status:       ticket.Status,
+		})
+	}
+
+	status, BonusBody, respHeaders, err := forwardRequest(c, "GET", "http://bonus:8050/privilege", headers)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+
+	var bonus modelGateway.PrivilegeResponse
+	if err := json.Unmarshal(BonusBody, &bonus); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse bonus response"})
+		return
+	}
+
+	var resp CombinedResponse
+	resp.Tickets = ticketInfos
+	resp.Privilege.Balance = fmt.Sprintf("%d", bonus.Balance) // конвертируем int в string
+	resp.Privilege.Status = bonus.Status
+	
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *Handler) BuyTicketUSer(c *gin.Context) {
