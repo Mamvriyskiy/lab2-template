@@ -1,8 +1,12 @@
 package services
 
-import "github.com/!mamvriyskiy/database_course/main/pkg/repository"
+import (
+	repository "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
+	model "github.com/Mamvriyskiy/lab2-template/src/bonus/model"
+)
 
 type Bonus interface {
+	GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error)
 }
 
 type Services struct {

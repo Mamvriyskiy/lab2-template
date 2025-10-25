@@ -1,6 +1,8 @@
 package services
 
-import "github.com/!mamvriyskiy/database_course/main/pkg/repository"
+import (
+	reposiroty "github.com/Mamvriyskiy/lab2-template/src/ticket/reposiroty"
+)
 
 type Ticket interface {
 }

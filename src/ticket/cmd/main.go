@@ -4,12 +4,9 @@ package main
 import (
 	"os"
 
-	// "github.com/joho/godotenv"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
-
-	handler "github.com/Mamvriyskiy/lab2-template/src/gateway/handler"
-	services "github.com/Mamvriyskiy/lab2-template/src/gateway/services"
+	handler "github.com/Mamvriyskiy/lab2-template/src/ticket/handler"
+	services "github.com/Mamvriyskiy/lab2-template/src/ticket/services"
+	reposiroty "github.com/Mamvriyskiy/lab2-template/src/ticket/reposiroty"
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
 )
 
@@ -20,18 +17,19 @@ func initConfig() error {
 }
 
 func main() {
-	if err := initConfig(); err != nil {
-		return
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("No .env file found: %v", err)
 	}
 
 	db, err := repo.NewPostgresDB(&repo.Config{
-    Host:     os.Getenv("DB_HOST"),
-    Port:     os.Getenv("DB_PORT"),
-    Username: os.Getenv("DB_USERNAME"),
-    Password: os.Getenv("DB_PASSWORD"),
-    DBName:   os.Getenv("DB_NAME"),
-    SSLMode:  os.Getenv("DB_SSLMODE"),
-})
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		Username: os.Getenv("DB_USERNAME"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSLMODE"),
+	})
 
 
 	if err != nil {
@@ -43,7 +41,7 @@ func main() {
 	handlers := handler.NewHandler(services)
 
 	srv := new(server.Server)
-	if err := srv.Run("8080", handlers.InitRouters()); err != nil {
+	if err := srv.Run("8070", handlers.InitRouters()); err != nil {
 		return
 	}
 }

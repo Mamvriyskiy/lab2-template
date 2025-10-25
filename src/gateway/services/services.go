@@ -1,24 +1,19 @@
 package services
 
 import (
-	"github.com/!mamvriyskiy/lab1-template/person/model"
-	"github.com/!mamvriyskiy/lab1-template/person/repository"
+
 )
 
-type Persons interface {
-	GetInfoPerson(personID int) (model.Person, error)
-	GetInfoPersons() ([]model.Person, error)
-	CreateNewRecordPerson(person model.Person) (model.Person, error)
-	UpdateRecordPerson(person model.Person) (model.Person, error)
-	DeleteRecordPerson(personID int) error
+type Gateway interface {
+
 }
 
 type Services struct {
-	Persons
+	Gateway
 }
 
-func NewServices(repo *repository.Repository) *Services {
+func NewServices() *Services {
 	return &Services{
-		Persons: NewPersonsService(),
+		Gateway: NewGatewayService(),
 	}
 }

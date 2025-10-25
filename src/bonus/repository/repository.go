@@ -2,10 +2,11 @@ package repository
 
 import (
 	"github.com/jmoiron/sqlx"
-	//
+	model "github.com/Mamvriyskiy/lab2-template/src/bonus/model"
 )
 
 type RepoBonus interface {
+	GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error)
 }
 
 type Repository struct {

@@ -1,25 +1,22 @@
 package main
-package main
 
 import (
 	"os"
 
-	// "github.com/joho/godotenv"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
-
+	"log"
+	"github.com/joho/godotenv"
 	handler "github.com/Mamvriyskiy/lab2-template/src/flight/handler"
 	services "github.com/Mamvriyskiy/lab2-template/src/flight/services"
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
+	repo "github.com/Mamvriyskiy/lab2-template/src/flight/repository"
 )
 
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
-}
-
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("No .env file found: %v", err)
+	}
+
 	db, err := repo.NewPostgresDB(&repo.Config{
 		Host:     os.Getenv("DB_HOST"),
 		Port:     os.Getenv("DB_PORT"),
@@ -30,17 +27,17 @@ func main() {
 	})
 
 	if err != nil {
-		logger.Fatal("Error connect db:", zap.Error(err))
+		log.Fatal("Error connect db:", err.Error())
 		return
 	}
 
 	repos := repo.NewRepository(db)
-	services := service.NewServices(repos)
-	handlers := handler.NewHandler(services)
+	service := services.NewServices(repos)
+	handlers := handler.NewHandler(service)
 
 	srv := new(server.Server)
-	if err := srv.Run("8080", handlers.InitRouters()); err != nil {
-		logger.Fatal("Error occurred while running http server:", zap.Error(err))
+	if err := srv.Run("8060", handlers.InitRouters()); err != nil {
+		log.Fatal("Error occurred while running http server:", err.Error())
 		return
 	}
 }
