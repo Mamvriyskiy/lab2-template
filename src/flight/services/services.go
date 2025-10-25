@@ -7,6 +7,7 @@ import (
 
 type Flight interface {
 	GetInfoAboutFlight(page, size int) (model.FlightResponse, error)
+	GetInfoAboutFlightByFlightNumber(flightNumber string) (model.Flight, error)
 }
 
 type Services struct {

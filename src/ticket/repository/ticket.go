@@ -13,7 +13,7 @@ func NewTicketPostgres(db *sqlx.DB) *TicketPostgres {
 	return &TicketPostgres{db: db}
 }
 
-func (r *TicketPostgres) GetInfoAboutTiket(ticketUID string) (*model.Ticket, error) {
+func (r *TicketPostgres) GetInfoAboutTiket(ticketUID string) (model.Ticket, error) {
     query := `
         SELECT ticket_uid, username, flight_number, price, status
         FROM ticket
@@ -29,10 +29,10 @@ func (r *TicketPostgres) GetInfoAboutTiket(ticketUID string) (*model.Ticket, err
     )
 
     if err != nil {
-        return nil, err
+        return model.Ticket{}, err
     }
 
-    return &ticket, nil
+    return ticket, nil
 }
 
 func (r *TicketPostgres) GetInfoAboutTikets(username string) ([]model.Ticket, error) {

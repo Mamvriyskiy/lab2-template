@@ -33,7 +33,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	flight.GET("/tickets", h.GetInfoAboutAllUserTickets)
 
 	// Получить информацию о конкретном билете пользователя
-	flight.GET("/tickets/:ticketUid", h.GetInfoAboutUserTicket)
+	flight.GET("/ticket/:ticketUid", h.GetInfoAboutUserTicket)
 
 	// Покупка билета
 	flight.POST("/tickets/:ticketUid", h.BuyTicketUSer)

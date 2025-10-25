@@ -15,6 +15,31 @@ func NewFlightPostgres(db *sqlx.DB) *FlightPostgres {
 	return &FlightPostgres{db: db}
 }
 
+func (r *FlightPostgres) GetInfoAboutFlightByFlightNumber(flightNumber string) (model.Flight, error) {
+	var flight model.Flight
+
+	query := `
+		SELECT id, flight_number, datetime, from_airport_id, to_airport_id, price
+		FROM flight
+		WHERE flight_number = $1
+	`
+
+	err := r.db.QueryRow(query, flightNumber).Scan(
+		&flight.ID,
+		&flight.FlightNumber,
+		&flight.Datetime,
+		&flight.FromAirportID,
+		&flight.ToAirportID,
+		&flight.Price,
+	)
+	if err != nil {
+		return model.Flight{}, err
+	}
+
+	return flight, nil
+}
+
+
 func (r *FlightPostgres) GetFlights(page, size int) (model.FlightResponse, error) {
 	offset := (page - 1) * size
 

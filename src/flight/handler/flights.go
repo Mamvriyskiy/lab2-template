@@ -30,3 +30,18 @@ func (h *Handler) GetInfoAboutFlight(c *gin.Context) {
 
     c.JSON(http.StatusOK, flightsList)
 }
+
+func (h *Handler) GetInfoAboutFlightByFlightNumber(c *gin.Context) {
+    flightNumber := c.Param("flightNumber")
+    if flightNumber == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Empty flightNumer"})
+    }
+
+    flight, err := h.services.GetInfoAboutFlightByFlightNumber(flightNumber)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, flight)
+} 

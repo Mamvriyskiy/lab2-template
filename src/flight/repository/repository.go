@@ -7,6 +7,7 @@ import (
 
 type RepoFlight interface {
 	GetFlights(page, size int) (model.FlightResponse, error)
+	GetInfoAboutFlightByFlightNumber(flightNumber string) (model.Flight, error) 
 }
 
 type Repository struct {

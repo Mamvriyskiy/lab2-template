@@ -13,7 +13,7 @@ func NewTicketService(repo repository.RepoTicket) *TicketService {
 	return &TicketService{repo: repo}
 }
 
-func (s *TicketService) GetInfoAboutTiket(ticketUID string) ([]model.Ticket, error) {
+func (s *TicketService) GetInfoAboutTiket(ticketUID string) (model.Ticket, error) {
 	return s.repo.GetInfoAboutTiket(ticketUID)
 }
 

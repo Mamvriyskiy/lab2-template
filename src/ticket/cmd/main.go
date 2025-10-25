@@ -1,20 +1,14 @@
 package main
-package main
 
 import (
 	"os"
-
+	"log"
+	"github.com/joho/godotenv"
 	handler "github.com/Mamvriyskiy/lab2-template/src/ticket/handler"
-	services "github.com/Mamvriyskiy/lab2-template/src/ticket/services"
-	reposiroty "github.com/Mamvriyskiy/lab2-template/src/ticket/reposiroty"
+	service "github.com/Mamvriyskiy/lab2-template/src/ticket/services"
+	repo "github.com/Mamvriyskiy/lab2-template/src/ticket/repository"
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
 )
-
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
-}
 
 func main() {
 	err := godotenv.Load()

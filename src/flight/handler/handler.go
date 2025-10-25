@@ -24,6 +24,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	flight := router.Group("")
 
 	flight.GET("/flight", h.GetInfoAboutFlight)
+	flight.GET("/flight/:flightNumber", h.GetInfoAboutFlightByFlightNumber)
 
 	return router
 }
