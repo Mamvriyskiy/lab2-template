@@ -22,10 +22,10 @@ jobs:
       - name: Build images
         timeout-minutes: 10
         run: |
-          docker-compose build gateway
-          docker-compose build flight
-          docker-compose build bonus
-          docker-compose build ticket
+          docker compose build gateway
+          docker compose build flight
+          docker compose build bonus
+          docker compose build ticket
 
       - name: Run containers
         timeout-minutes: 5
