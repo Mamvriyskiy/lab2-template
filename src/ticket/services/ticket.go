@@ -21,3 +21,6 @@ func (s *TicketService) GetInfoAboutTikets(username string) ([]model.Ticket, err
 	return s.repo.GetInfoAboutTikets(username)
 }
 
+func (s *TicketService) UpdateStatusTicket(ticket string) error {
+	return s.repo.UpdateStatusTicket(ticket)
+}

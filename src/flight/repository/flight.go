@@ -19,17 +19,24 @@ func (r *FlightPostgres) GetInfoAboutFlightByFlightNumber(flightNumber string) (
 	var flight model.Flight
 
 	query := `
-		SELECT id, flight_number, datetime, from_airport_id, to_airport_id, price
-		FROM flight
-		WHERE flight_number = $1
+		SELECT 
+			f.flight_number,
+			af.name || ' ' || af.city AS from_airport,
+			at.name || ' ' || at.city AS to_airport,
+			TO_CHAR(f.datetime, 'YYYY-MM-DD HH24:MI') AS date,
+			f.price
+		FROM flight f
+		JOIN airport af ON f.from_airport_id = af.id
+		JOIN airport at ON f.to_airport_id = at.id
+		WHERE f.flight_number = $1
 	`
 
-	err := r.db.QueryRow(query, flightNumber).Scan(
-		&flight.ID,
+	row := r.db.QueryRow(query, flightNumber)
+	err := row.Scan(
 		&flight.FlightNumber,
+		&flight.FromAirport,
+		&flight.ToAirport,
 		&flight.Datetime,
-		&flight.FromAirportID,
-		&flight.ToAirportID,
 		&flight.Price,
 	)
 	if err != nil {

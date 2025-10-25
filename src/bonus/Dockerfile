@@ -1,7 +1,11 @@
-FROM golang
+FROM golang:1.25.1
 
-COPY ./ /src/bonus
 WORKDIR /bonus
-RUN go mod tidy && go mod vendor && go build -o ./bonus/ bonus/cmd/main.go
 
-ENTRYPOINT ["bonus/cmd/main"]
+COPY ./ ./
+
+RUN go mod tidy
+RUN go mod vendor
+RUN go build -o main ./cmd/main.go
+
+ENTRYPOINT ["./main"]

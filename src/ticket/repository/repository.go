@@ -8,6 +8,7 @@ import (
 type RepoTicket interface {
 	GetInfoAboutTiket(ticketUID string) (model.Ticket, error)
 	GetInfoAboutTikets(username string) ([]model.Ticket, error)
+	UpdateStatusTicket(ticket string) error
 }
 
 type Repository struct {

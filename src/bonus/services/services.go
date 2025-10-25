@@ -7,6 +7,7 @@ import (
 
 type Bonus interface {
 	GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error)
+	UpdateBonus(username, ticketUid string) error
 }
 
 type Services struct {

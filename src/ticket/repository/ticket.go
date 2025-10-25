@@ -1,6 +1,7 @@
 package repository
 
 import (
+    "fmt"
 	"github.com/jmoiron/sqlx"
 	model "github.com/Mamvriyskiy/lab2-template/src/ticket/model"
 )
@@ -12,6 +13,32 @@ type TicketPostgres struct {
 func NewTicketPostgres(db *sqlx.DB) *TicketPostgres {
 	return &TicketPostgres{db: db}
 }
+
+func (r *TicketPostgres) UpdateStatusTicket(ticketUid string) error {
+    query := `
+        UPDATE ticket
+        SET status = 'CANCELED'
+        WHERE ticket_uid = $1
+          AND status = 'PAID'
+    `
+
+    res, err := r.db.Exec(query, ticketUid)
+    if err != nil {
+        return err
+    }
+
+    rowsAffected, err := res.RowsAffected()
+    if err != nil {
+        return err
+    }
+
+    if rowsAffected == 0 {
+        return fmt.Errorf("no ticket updated: ticket either does not exist or is not PAID")
+    }
+
+    return nil
+}
+
 
 func (r *TicketPostgres) GetInfoAboutTiket(ticketUID string) (model.Ticket, error) {
     query := `

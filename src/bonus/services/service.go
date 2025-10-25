@@ -16,3 +16,7 @@ func NewBonusService(repo repository.RepoBonus) *BonusService {
 func (s *BonusService) GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error) {
 	return s.repo.GetInfoAboutUserPrivilege(username)
 }
+
+func (s *BonusService) UpdateBonus(username, ticketUid string) error {
+	return s.repo.UpdateBonus(username, ticketUid)
+}

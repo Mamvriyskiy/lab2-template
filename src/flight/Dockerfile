@@ -1,7 +1,11 @@
-FROM golang
+FROM golang:1.25.1
 
-COPY ./ /src/flight
 WORKDIR /flight
-RUN go mod tidy && go mod vendor && go build -o ./flight/ flight/cmd/main.go
 
-ENTRYPOINT ["flight/cmd/main"]
+COPY ./ ./
+
+RUN go mod tidy
+RUN go mod vendor
+RUN go build -o main ./cmd/main.go
+
+ENTRYPOINT ["./main"]

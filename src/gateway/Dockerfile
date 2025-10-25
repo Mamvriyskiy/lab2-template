@@ -1,7 +1,12 @@
-FROM golang
+FROM golang:1.25.1
 
-COPY ./ /src/gateway
 WORKDIR /gateway
-RUN go mod tidy && go mod vendor && go build -o ./gateway/ gateway/cmd/main.go
 
-ENTRYPOINT ["gateway/cmd/main"]
+COPY ./ ./
+
+# Сборка
+RUN go mod tidy
+RUN go mod vendor
+RUN go build -o main ./cmd/main.go
+
+ENTRYPOINT ["./main"]

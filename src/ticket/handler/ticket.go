@@ -5,6 +5,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h *Handler) UpdateStatusTicket(c *gin.Context) {
+    ticketUID := c.Param("ticketUid")
+	if ticketUID == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "ticketUid is required"})
+        return
+    }
+
+    err := h.services.UpdateStatusTicket(ticketUID)
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.Status(http.StatusOK)
+}
 
 func (h *Handler) GetInfoAboutTiket(c *gin.Context) {
 	ticketUID := c.Param("ticketUid")

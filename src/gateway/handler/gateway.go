@@ -1,16 +1,14 @@
 package handler
 
 import (
-    "fmt"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
-    "io"
-	"github.com/gin-gonic/gin"
-    "encoding/json"
-    modelGateway "github.com/Mamvriyskiy/lab2-template/src/gateway/model"
-    modelTicket "github.com/Mamvriyskiy/lab2-template/src/ticket/model"
-    modelFlight "github.com/Mamvriyskiy/lab2-template/src/flight/model"
-)
 
+	modelGateway "github.com/Mamvriyskiy/lab2-template/src/gateway/model"
+	"github.com/gin-gonic/gin"
+)
 
 func forwardRequest(c *gin.Context, method, targetURL string, headers map[string]string) (int, []byte, http.Header, error) {
 	if len(c.Request.URL.RawQuery) > 0 {
@@ -41,9 +39,8 @@ func forwardRequest(c *gin.Context, method, targetURL string, headers map[string
 	return resp.StatusCode, body, resp.Header, nil
 }
 
-
 func (h *Handler) GetInfoAboutFlight(c *gin.Context) {
-	status, body, headers, err := forwardRequest(c, "GET", "http://localhost:8060/flight", nil)
+	status, body, headers, err := forwardRequest(c, "GET", "http://flight:8060/flight", nil)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 		return
@@ -52,66 +49,64 @@ func (h *Handler) GetInfoAboutFlight(c *gin.Context) {
 	c.Data(status, headers.Get("Content-Type"), body)
 }
 
-
 func (h *Handler) GetInfoAboutUserTicket(c *gin.Context) {
-    ticketUid := c.Param("ticketUid")
-    if ticketUid == "" {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "ticketUid is required"})
-        return
-    }
+	ticketUid := c.Param("ticketUid")
+	if ticketUid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ticketUid is required"})
+		return
+	}
 
-    // 1️⃣ Запрашиваем билет
-    ticketURL := "http://localhost:8070/ticket/" + ticketUid
-    status, body, _, err := forwardRequest(c, "GET", ticketURL, nil)
-    if err != nil {
-        c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
-        return
-    }
+	// 1️⃣ Запрашиваем билет
+	ticketURL := "http://ticket:8070/ticket/" + ticketUid
+	status, body, _, err := forwardRequest(c, "GET", ticketURL, nil)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
 
-    if status != http.StatusOK {
-        c.Data(status, "application/json", body)
-        return
-    }
+	if status != http.StatusOK {
+		c.Data(status, "application/json", body)
+		return
+	}
 
-    var ticket modelTicket.Ticket
-    if err := json.Unmarshal(body, &ticket); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse ticket response"})
-        return
-    }
+	var ticket modelGateway.Ticket
+	if err := json.Unmarshal(body, &ticket); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse ticket response"})
+		return
+	}
 
-    // 2️⃣ Запрашиваем данные о рейсе
-    flightURL := "http://localhost:8060/flight/" + ticket.FlightNumber
-    flightStatus, flightBody, _, err := forwardRequest(c, "GET", flightURL, nil)
-    if err != nil {
-        c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
-        return
-    }
+	// 2️⃣ Запрашиваем данные о рейсе
+	flightURL := "http://flight:8060/flight/" + ticket.FlightNumber
+	flightStatus, flightBody, _, err := forwardRequest(c, "GET", flightURL, nil)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
 
-    if flightStatus != http.StatusOK {
-        c.Data(flightStatus, "application/json", flightBody)
-        return
-    }
+	if flightStatus != http.StatusOK {
+		c.Data(flightStatus, "application/json", flightBody)
+		return
+	}
 
-    var flight modelFlight.Flight
-    if err := json.Unmarshal(flightBody, &flight); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse flight response"})
-        return
-    }
+	var flight modelGateway.Flight
+	if err := json.Unmarshal(flightBody, &flight); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse flight response"})
+		return
+	}
 
-    // 3️⃣ Объединяем оба ответа
-    response := modelGateway.TicketInfo{
-        TicketUID:    ticket.TicketUID,
-        FlightNumber: flight.FlightNumber,
-        FromAirport:  flight.FromAirport,
-        ToAirport:    flight.ToAirport,
-        Date:         flight.Date,
-        Price:        flight.Price,
-        Status:       ticket.Status,
-    }
+	// 3️⃣ Объединяем оба ответа
+	response := modelGateway.TicketInfo{
+		TicketUID:    ticket.TicketUID,
+		FlightNumber: flight.FlightNumber,
+		FromAirport:  flight.FromAirport,
+		ToAirport:    flight.ToAirport,
+		Date:         flight.Datetime,
+		Price:        flight.Price,
+		Status:       ticket.Status,
+	}
 
-    c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, response)
 }
-
 
 func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 	username := c.GetHeader("X-User-Name")
@@ -121,7 +116,7 @@ func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 	}
 
 	headers := map[string]string{"X-User-Name": username}
-	status, body, respHeaders, err := forwardRequest(c, "GET", "http://localhost:8070/tickets", headers)
+	status, body, respHeaders, err := forwardRequest(c, "GET", "http://ticket:8070/tickets", headers)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 		return
@@ -129,7 +124,6 @@ func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 
 	c.Data(status, respHeaders.Get("Content-Type"), body)
 }
-
 
 func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
 	username := c.GetHeader("X-User-Name")
@@ -139,7 +133,7 @@ func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
 	}
 
 	headers := map[string]string{"X-User-Name": username}
-	status, body, respHeaders, err := forwardRequest(c, "GET", "http://localhost:8050/privilege", headers)
+	status, body, respHeaders, err := forwardRequest(c, "GET", "http://bonus:8050/privilege", headers)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 		return
@@ -148,19 +142,57 @@ func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
 	c.Data(status, respHeaders.Get("Content-Type"), body)
 }
 
-
-
 func (h *Handler) GetInfoAboutUser(c *gin.Context) {
 
 }
-
 
 func (h *Handler) BuyTicketUSer(c *gin.Context) {
 
 }
 
-
 func (h *Handler) DeleteTicketUSer(c *gin.Context) {
+	ticketUid := c.Param("ticketUid")
+	if ticketUid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ticketUid is required"})
+		return
+	}
 
+	username := c.GetHeader("X-User-Name")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "X-User-Name header is required"})
+		return
+	}
+
+	// 1️⃣ Запрашиваем билет
+	ticketURL := "http://ticket:8070/ticket/" + ticketUid
+	status, body, _, err := forwardRequest(c, "PATCH", ticketURL, nil)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+
+	if status != http.StatusOK {
+		c.Data(status, "application/json", body)
+		return
+	}
+
+	headers := map[string]string{"X-User-Name": username}
+	// 2️⃣ Запрашиваем данные о рейсе
+	flightURL := "http://flight:8060/bonus/" + ticketUid
+	flightStatus, flightBody, _, err := forwardRequest(c, "PATCH", flightURL, headers)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+
+	if flightStatus != http.StatusOK {
+		c.Data(flightStatus, "application/json", flightBody)
+		return
+	}
+
+	var flight modelGateway.Flight
+	if err := json.Unmarshal(flightBody, &flight); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse flight response"})
+		return
+	}
 }
-

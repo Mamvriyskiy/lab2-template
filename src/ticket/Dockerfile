@@ -1,7 +1,11 @@
-FROM golang
+FROM golang:1.25.1
 
-COPY ./ /src/ticket
 WORKDIR /ticket
-RUN go mod tidy && go mod vendor && go build -o ./ticket/ ticket/cmd/main.go
 
-ENTRYPOINT ["ticket/cmd/main"]
+COPY ./ ./
+
+RUN go mod tidy
+RUN go mod vendor
+RUN go build -o main ./cmd/main.go
+
+ENTRYPOINT ["./main"]
