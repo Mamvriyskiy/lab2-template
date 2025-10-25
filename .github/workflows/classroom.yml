@@ -27,13 +27,13 @@ jobs:
           docker compose build bonus
           docker compose build ticket
 
-      - name: Run containers
-        timeout-minutes: 5
-        run: |
-          docker compose up -d
-          ./scripts/wait-script.sh
-        env:
-          WAIT_PORTS: 8080,8070,8060,8050
+      # - name: Run containers
+      #   timeout-minutes: 5
+      #   run: |
+      #     docker compose up -d
+      #     ./scripts/wait-script.sh
+      #   env:
+      #     WAIT_PORTS: 8080,8070,8060,8050
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
