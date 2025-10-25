@@ -115,14 +115,64 @@ func (h *Handler) GetInfoAboutAllUserTickets(c *gin.Context) {
 		return
 	}
 
+	// 1️⃣ Получаем все билеты пользователя
 	headers := map[string]string{"X-User-Name": username}
-	status, body, respHeaders, err := forwardRequest(c, "GET", "http://ticket:8070/tickets", headers)
+	status, body, respHeaders, err := forwardRequest(c, "GET", "http://localhost:8070/tickets", headers)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 		return
 	}
+	if status != http.StatusOK {
+		c.Data(status, respHeaders.Get("Content-Type"), body)
+		return
+	}
 
-	c.Data(status, respHeaders.Get("Content-Type"), body)
+	var tickets []modelGateway.Ticket
+	if err := json.Unmarshal(body, &tickets); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse tickets"})
+		return
+	}
+
+	print(tickets)
+	// 2️⃣ Проходим по каждому билету и запрашиваем информацию о рейсе
+	var ticketInfos []modelGateway.TicketInfo
+	for _, ticket := range tickets {
+		if ticket.FlightNumber == "" {
+			continue
+		}
+		flightURL := "http://localhost:8060/flight/" + ticket.FlightNumber
+		flightStatus, flightBody, _, err := forwardRequest(c, "GET", flightURL, nil)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+			return
+		}
+
+		if flightStatus != http.StatusOK {
+			c.Data(flightStatus, "application/json", flightBody)
+			return
+		}
+
+		var flight modelGateway.Flight
+		if err := json.Unmarshal(flightBody, &flight); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse flight response"})
+			return
+		}
+
+		print(flight.FlightNumber)
+		// 3️⃣ Объединяем данные билета и рейса
+		ticketInfos = append(ticketInfos, modelGateway.TicketInfo{
+			TicketUID:    ticket.TicketUID,
+			FlightNumber: flight.FlightNumber,
+			FromAirport:  flight.FromAirport,
+			ToAirport:    flight.ToAirport,
+			Date:         flight.Datetime,
+			Price:        flight.Price,
+			Status:       ticket.Status,
+		})
+	}
+
+	// 4️⃣ Отправляем массив в ответе
+	c.JSON(http.StatusOK, ticketInfos)
 }
 
 func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
