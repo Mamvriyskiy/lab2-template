@@ -21,7 +21,11 @@ jobs:
 
       - name: Build images
         timeout-minutes: 10
-        run: docker compose build
+        run: |
+          docker-compose build gateway
+          docker-compose build flight
+          docker-compose build bonus
+          docker-compose build ticket
 
       - name: Run containers
         timeout-minutes: 5
@@ -34,9 +38,8 @@ jobs:
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
-          # TODO insert your variant
-          collection: <variant>/postman/collection.json
-          environment: <variant>/postman/environment.json
+          collection: v1/postman/collection.json
+          environment: v1/postman/environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
 

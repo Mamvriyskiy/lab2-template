@@ -85,3 +85,19 @@ func (r *TicketPostgres) GetInfoAboutTikets(username string) ([]model.Ticket, er
 
     return tickets, nil
 }
+
+func (r *TicketPostgres) CreateTicket(username, flightNumber string, price int) (string, error) {
+    query := `
+        INSERT INTO ticket (ticket_uid, username, flight_number, price, status) 
+        VALUES (gen_random_uuid(), $1, $2, $3, 'PAID') 
+        RETURNING ticket_uid
+    `
+    
+    var ticketUID string
+    err := r.db.QueryRow(query, username, flightNumber, price).Scan(&ticketUID)
+    if err != nil {
+        return "", fmt.Errorf("failed to create ticket: %w", err)
+    }
+    
+    return ticketUID, nil
+}

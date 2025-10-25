@@ -45,7 +45,3 @@ services:
       - "8070:8070"
     depends_on:
       - gateway
-
-
-volumes:
-  db-data:

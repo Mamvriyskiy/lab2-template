@@ -26,6 +26,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	ticket.GET("/ticket/:ticketUid", h.GetInfoAboutTiket)
 	ticket.GET("/tickets", h.GetInfoAboutTikets)
 	ticket.PATCH("/ticket/:ticketUid", h.UpdateStatusTicket)
+	ticket.POST("/ticket", h.CreateTicket)
 
 	return router
 }
