@@ -4,7 +4,6 @@ WORKDIR /gateway
 
 COPY ./ ./
 
-# Сборка
 RUN go mod tidy
 RUN go mod vendor
 RUN go build -o main ./cmd/main.go

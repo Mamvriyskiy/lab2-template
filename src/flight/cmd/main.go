@@ -4,11 +4,12 @@ import (
 	"os"
 
 	"log"
-	"github.com/joho/godotenv"
+
 	handler "github.com/Mamvriyskiy/lab2-template/src/flight/handler"
+	repo "github.com/Mamvriyskiy/lab2-template/src/flight/repository"
 	services "github.com/Mamvriyskiy/lab2-template/src/flight/services"
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
-	repo "github.com/Mamvriyskiy/lab2-template/src/flight/repository"
+	"github.com/joho/godotenv"
 )
 
 func main() {

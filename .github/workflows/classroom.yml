@@ -22,18 +22,22 @@ jobs:
       - name: Build images
         timeout-minutes: 10
         run: |
-          docker compose build gateway
-          docker compose build flight
-          docker compose build bonus
-          docker compose build ticket
+          docker compose build
 
-      # - name: Run containers
-      #   timeout-minutes: 5
-      #   run: |
-      #     docker compose up -d
-      #     ./scripts/wait-script.sh
-      #   env:
-      #     WAIT_PORTS: 8080,8070,8060,8050
+      - name: Run containers
+        timeout-minutes: 5
+        run: |
+          docker compose up -d
+          ./scripts/wait-script.sh
+        env:
+          WAIT_PORTS: 8080,8070,8060,8050
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_USERNAME: ${{ vars.DB_USERNAME }}
+          DB_SSLMODE: ${{ vars.DB_SSLMODE }}
+
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"os"
 	"log"
-	"github.com/joho/godotenv"
-	handler "github.com/Mamvriyskiy/lab2-template/src/ticket/handler"
-	service "github.com/Mamvriyskiy/lab2-template/src/ticket/services"
-	repo "github.com/Mamvriyskiy/lab2-template/src/ticket/repository"
+	"os"
+
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
+	handler "github.com/Mamvriyskiy/lab2-template/src/ticket/handler"
+	repo "github.com/Mamvriyskiy/lab2-template/src/ticket/repository"
+	service "github.com/Mamvriyskiy/lab2-template/src/ticket/services"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -24,7 +25,6 @@ func main() {
 		DBName:   os.Getenv("DB_NAME"),
 		SSLMode:  os.Getenv("DB_SSLMODE"),
 	})
-
 
 	if err != nil {
 		return

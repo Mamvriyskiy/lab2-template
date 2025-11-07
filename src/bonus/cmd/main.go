@@ -1,16 +1,16 @@
 package main
 
 import (
-	"os"
 	"log"
+	"os"
+
 	"github.com/joho/godotenv"
 
 	handler "github.com/Mamvriyskiy/lab2-template/src/bonus/handler"
+	repo "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
 	services "github.com/Mamvriyskiy/lab2-template/src/bonus/services"
 	server "github.com/Mamvriyskiy/lab2-template/src/server"
-	repo "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
 )
-
 
 func main() {
 	err := godotenv.Load()
