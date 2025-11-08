@@ -23,28 +23,9 @@ jobs:
         timeout-minutes: 10
         run: |
           docker compose build
-          
-      - name: Debug DB variables
-        run: |
-          echo ""
-        env:
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_PORT: ${{ vars.DB_PORT }}
-          DB_NAME: ${{ vars.DB_NAME }}
-          DB_USERNAME: ${{ vars.DB_USERNAME }}
-          DB_SSLMODE: ${{ vars.DB_SSLMODE }}
-          WAIT_PORTS: ${{ vars.WAIT_PORTS }}
 
       - name: Run containers
         timeout-minutes: 5
-        env:
-          WAIT_PORTS: ${{ vars.WAIT_PORTS }}
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ vars.DB_PORT }}
-          DB_NAME: ${{ vars.DB_NAME }}
-          DB_USERNAME: ${{ vars.DB_USERNAME }}
-          DB_SSLMODE: ${{ vars.DB_SSLMODE }}
         run: |
           docker compose up -d
           echo "=== Containers status ==="

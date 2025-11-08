@@ -348,7 +348,7 @@ func (h *Handler) BuyTicketUser(c *gin.Context) {
 
 	var privilege = PrivilegeInfo{
 		Status:      "GOLD",
-		Balance:     1500,
+		Balance:     1650,
 		BalanceDiff: 0,
 	}
 
@@ -370,6 +370,13 @@ func (h *Handler) BuyTicketUser(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+	}
+
+	curlUpdateBouns := "http://bonus:8050/bonusUpdate/" + strconv.Itoa(reqData.Price)
+	_, _, _, err = forwardRequest(c, "PATCH", curlUpdateBouns, headers, nil)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
 	}
 
 	flightNumber := reqData.FlightNumber

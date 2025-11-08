@@ -17,6 +17,22 @@ func NewBonusPostgres(db *sqlx.DB) *BonusPostgres {
 	return &BonusPostgres{db: db}
 }
 
+func (r *BonusPostgres) UpdateBonusBonus(username string, price int) error {
+    bonusAmount := price / 10
+    
+    _, err := r.db.Exec(`
+        UPDATE privilege 
+        SET balance = balance + $1 
+        WHERE username = $2
+    `, bonusAmount, username)
+    
+    if err != nil {
+        return fmt.Errorf("failed to update bonus balance: %w", err)
+    }
+    
+    return nil
+}
+
 func (r *BonusPostgres) GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error) {
 	var resp model.PrivilegeResponse
 	var privilegeID int

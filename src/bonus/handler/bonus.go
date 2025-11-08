@@ -24,6 +24,26 @@ func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
+func (h *Handler) UpdateBonusBonus(c *gin.Context) {
+    username := c.GetHeader("X-User-Name")
+    if username == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "X-User-Name header is required"})
+        return
+    }
+
+    priceStr := c.Param("price")
+
+    price, err := strconv.Atoi(priceStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    _ = h.services.UpdateBonusBonus(username, price)
+
+    c.Status(http.StatusOK)
+}
+
 
 func (h *Handler) UpdateBonus(c *gin.Context) {
 	username := c.GetHeader("X-User-Name")

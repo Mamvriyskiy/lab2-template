@@ -26,7 +26,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	// Получить список всех перелетов
 	flight.GET("/flights", h.GetInfoAboutFlight)
 
-	// Возвращается информация о билетах и статусе в системе привилегии
+	// Возвращается информация о пользователе
 	flight.GET("/me", h.GetInfoAboutUser)
 
 	// Получить информацию о всех билетах пользователя
