@@ -275,7 +275,7 @@ func (h *Handler) GetInfoAboutUser(c *gin.Context) {
 
 	var resp CombinedResponse
 	resp.Tickets = ticketInfos
-	resp.Privilege.Balance = fmt.Sprintf("%d", bonus.Balance) // конвертируем int в string
+	resp.Privilege.Balance = bonus.Balance
 	resp.Privilege.Status = bonus.Status
 
 	c.JSON(http.StatusOK, resp)
