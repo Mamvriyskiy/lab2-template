@@ -2,8 +2,9 @@ package handler
 
 import (
 	"net/http"
-	"github.com/gin-gonic/gin"
+
 	services "github.com/Mamvriyskiy/lab2-template/src/flight/services"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {

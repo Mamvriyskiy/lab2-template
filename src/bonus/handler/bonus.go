@@ -39,7 +39,13 @@ func (h *Handler) UpdateBonusBonus(c *gin.Context) {
         return
     }
 
-    _ = h.services.UpdateBonusBonus(username, price)
+    ticketUid := c.Param("ticketUID")
+    if ticketUid == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "ticketUid is required"})
+        return
+    }
+
+    _ = h.services.UpdateBonusBonus(username, ticketUid, price)
 
     c.Status(http.StatusOK)
 }

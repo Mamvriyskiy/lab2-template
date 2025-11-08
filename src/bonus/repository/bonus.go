@@ -17,21 +17,64 @@ func NewBonusPostgres(db *sqlx.DB) *BonusPostgres {
 	return &BonusPostgres{db: db}
 }
 
-func (r *BonusPostgres) UpdateBonusBonus(username string, price int) error {
+func (r *BonusPostgres) UpdateBonusBonus(username, uid string, price int) error {
     bonusAmount := price / 10
     
-    _, err := r.db.Exec(`
+    tx, err := r.db.Begin()
+    if err != nil {
+        return fmt.Errorf("failed to begin transaction: %w", err)
+    }
+    defer tx.Rollback()
+
+	ticketUID := strings.Trim(uid, `"`)
+
+    var privilegeID int
+    err = tx.QueryRow(`
+        SELECT id FROM privilege WHERE username = $1
+    `, username).Scan(&privilegeID)
+	
+
+    if err != nil {
+        return fmt.Errorf("failed to get privilege ID: %w", err)
+    }
+    
+    result, err := tx.Exec(`
         UPDATE privilege 
         SET balance = balance + $1 
         WHERE username = $2
     `, bonusAmount, username)
     
+
     if err != nil {
         return fmt.Errorf("failed to update bonus balance: %w", err)
     }
     
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return fmt.Errorf("failed to get rows affected: %w", err)
+    }
+    
+    if rowsAffected == 0 {
+        return fmt.Errorf("user not found: %s", username)
+    }
+    
+    _, err = tx.Exec(`
+        INSERT INTO privilege_history 
+        (privilege_id, ticket_uid, datetime, balance_diff, operation_type) 
+        VALUES ($1, $2, $3, $4, $5)
+    `, privilegeID, ticketUID, time.Now(), bonusAmount, "FILL_IN_BALANCE")
+    
+    if err != nil {
+        return fmt.Errorf("failed to insert into privilege history: %w", err)
+    }
+    
+    if err = tx.Commit(); err != nil {
+        return fmt.Errorf("failed to commit transaction: %w", err)
+    }
+    
     return nil
 }
+
 
 func (r *BonusPostgres) GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error) {
 	var resp model.PrivilegeResponse

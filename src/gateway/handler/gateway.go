@@ -198,7 +198,7 @@ func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
 type CombinedResponse struct {
 	Tickets   []modelGateway.TicketInfo `json:"tickets"`
 	Privilege struct {
-		Balance int `json:"balance"`
+		Balance int    `json:"balance"`
 		Status  string `json:"status"`
 	} `json:"privilege"`
 }
@@ -372,7 +372,7 @@ func (h *Handler) BuyTicketUser(c *gin.Context) {
 		}
 	}
 
-	curlUpdateBouns := "http://bonus:8050/bonusUpdate/" + strconv.Itoa(reqData.Price)
+	curlUpdateBouns := "http://bonus:8050/bonusUpdate/" + uid + "/" + strconv.Itoa(reqData.Price)
 	_, _, _, err = forwardRequest(c, "PATCH", curlUpdateBouns, headers, nil)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
