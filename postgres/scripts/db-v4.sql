@@ -1,8 +1,9 @@
-CREATE DATABASE reservations;
-GRANT ALL PRIVILEGES ON DATABASE reservations TO program;
+-- Создание баз данных и предоставление прав
+CREATE DATABASE tickets;
+GRANT ALL PRIVILEGES ON DATABASE tickets TO program;
 
-CREATE DATABASE libraries;
-GRANT ALL PRIVILEGES ON DATABASE libraries TO program;
+CREATE DATABASE flights;
+GRANT ALL PRIVILEGES ON DATABASE flights TO program;
 
-CREATE DATABASE ratings;
-GRANT ALL PRIVILEGES ON DATABASE ratings TO program;
+CREATE DATABASE privileges;
+GRANT ALL PRIVILEGES ON DATABASE privileges TO program;

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"log"
 
 	handler "github.com/Mamvriyskiy/lab2-template/src/flight/handler"
@@ -19,12 +17,12 @@ func main() {
 	}
 
 	db, err := repo.NewPostgresDB(&repo.Config{
-		Host:     os.Getenv("DB_HOST"),
-		Port:     os.Getenv("DB_PORT"),
-		Username: os.Getenv("DB_USERNAME"),
-		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   os.Getenv("DB_NAME"),
-		SSLMode:  os.Getenv("DB_SSLMODE"),
+		Host:     "postgres",
+		Port:     "5432",
+		Username: "postgres",
+		Password: "postgres",
+		DBName:   "flights",
+		SSLMode:  "disable",
 	})
 
 	if err != nil {
