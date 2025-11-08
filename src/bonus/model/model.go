@@ -12,3 +12,9 @@ type PrivilegeResponse struct {
 	Status  string        `json:"status"`
 	History []HistoryItem `json:"history"`
 }
+
+type PrivilegeInfo struct {
+    Status      string `db:"status"`
+    Balance     int    `db:"balance"`
+    BalanceDiff int    `db:"balance_diff"`
+}

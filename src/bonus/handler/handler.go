@@ -24,7 +24,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	bonus := router.Group("")
 
 	bonus.GET("/privilege", h.GetInfoAboutUserPrivilege)
-	bonus.PATCH("/bonus/:ticketUid", h.UpdateBonus)
+	bonus.PATCH("/bonus/:ticketUID/:price", h.UpdateBonus)
 
 
 	return router

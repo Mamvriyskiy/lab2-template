@@ -7,7 +7,7 @@ import (
 
 type RepoBonus interface {
 	GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error)
-	UpdateBonus(username, ticketUid string) error
+	UpdateBonus(username, ticketUID string, price int) (model.PrivilegeInfo, error)
 }
 
 type Repository struct {

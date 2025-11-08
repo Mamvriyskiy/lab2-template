@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,17 +33,30 @@ func (h *Handler) UpdateBonus(c *gin.Context) {
         return
     }
 
-    ticketUid := c.Param("ticketUid")
+    ticketUid := c.Param("ticketUID")
     if ticketUid == "" {
         c.JSON(http.StatusBadRequest, gin.H{"error": "ticketUid is required"})
         return
     }
 
-    err := h.services.UpdateBonus(username, ticketUid)
+    priceStr := c.Param("price")
+
+    price, err := strconv.Atoi(priceStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    if price == 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    info, err := h.services.UpdateBonus(username, ticketUid, price)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
-    c.Status(http.StatusOK)
+    c.JSON(http.StatusOK, info)
 }

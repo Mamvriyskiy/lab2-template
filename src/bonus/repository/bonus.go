@@ -6,6 +6,7 @@ import (
 
 	model "github.com/Mamvriyskiy/lab2-template/src/bonus/model"
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 type BonusPostgres struct {
@@ -47,62 +48,63 @@ func (r *BonusPostgres) GetInfoAboutUserPrivilege(username string) (model.Privil
 			return resp, err
 		}
 		item.Date = dt.Format(time.RFC3339)
-	
+
 		resp.History = append(resp.History, item)
 	}
 
 	return resp, nil
 }
 
-func (r *BonusPostgres) UpdateBonus(username, ticketUid string) error {
+func (r *BonusPostgres) UpdateBonus(username, uid string, price int) (model.PrivilegeInfo, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		return model.PrivilegeInfo{}, err
 	}
 	defer tx.Rollback()
+	ticketUID := strings.Trim(uid, `"`)
 
 	// 1. Получаем ID и текущий баланс пользователя
 	var privilegeID, balance int
 	query := `SELECT id, balance FROM privilege WHERE username = $1`
 	err = tx.QueryRow(query, username).Scan(&privilegeID, &balance)
 	if err != nil {
-		return fmt.Errorf("user not found: %w", err)
+		return model.PrivilegeInfo{}, fmt.Errorf("user not found: %w", err)
 	}
 
-	// 2. Находим, сколько бонусов было списано при покупке
-	var spent int
-	err = tx.QueryRow(`
-		SELECT balance_diff 
-		FROM privilege_history
-		WHERE privilege_id = $1
-		  AND ticket_uid = $2
-		  AND operation_type = 'DEBIT_THE_ACCOUNT'
-		ORDER BY datetime DESC
-		LIMIT 1
-	`, privilegeID, ticketUid).Scan(&spent)
+	var balance_diff int
+	if price % balance == 0 {
+		balance_diff = balance - price
+	} else {
+		balance_diff = price
+	}
+
+	insertHistory := `
+		INSERT INTO privilege_history (
+			privilege_id, ticket_uid, datetime, balance_diff, operation_type
+		)
+		VALUES ($1, $2, NOW(), $3, 'DEBIT_THE_ACCOUNT')`
+
+	_, err = tx.Exec(insertHistory, privilegeID, ticketUID, balance_diff)
 	if err != nil {
-		return fmt.Errorf("no debit history found for ticket: %w", err)
+		return model.PrivilegeInfo{}, fmt.Errorf("failed to insert privilege history: %w", err)
 	}
 
-	if spent <= 0 {
-		return fmt.Errorf("nothing to refund for ticket %s", ticketUid)
-	}
+	var info model.PrivilegeInfo
 
-	// 3. Обновляем баланс пользователя
-	newBalance := balance + spent
-	_, err = tx.Exec(`UPDATE privilege SET balance = $1 WHERE id = $2`, newBalance, privilegeID)
+	queryInfo := `
+		SELECT p.status, p.balance, ph.balance_diff
+		FROM privilege p
+		JOIN privilege_history ph ON p.id = ph.privilege_id
+		WHERE p.username = $1
+		ORDER BY ph.datetime DESC
+		LIMIT 1;
+	`
+
+	err = tx.QueryRow(queryInfo, username).Scan(&info.Status, &info.Balance, &info.BalanceDiff)
 	if err != nil {
-		return err
+		return model.PrivilegeInfo{}, fmt.Errorf("failed to select privilege info: %w", err)
 	}
+	tx.Commit()
 
-	// 4. Добавляем запись в историю возврата
-	_, err = tx.Exec(`
-		INSERT INTO privilege_history (privilege_id, ticket_uid, datetime, balance_diff, operation_type)
-		VALUES ($1, $2, NOW(), $3, 'FILL_IN_BALANCE')
-	`, privilegeID, ticketUid, spent)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return info, err
 }

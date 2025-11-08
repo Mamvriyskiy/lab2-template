@@ -1,13 +1,13 @@
 package services
 
 import (
-	repository "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
 	model "github.com/Mamvriyskiy/lab2-template/src/bonus/model"
+	repository "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
 )
 
 type Bonus interface {
 	GetInfoAboutUserPrivilege(username string) (model.PrivilegeResponse, error)
-	UpdateBonus(username, ticketUid string) error
+	UpdateBonus(username, ticketUID string, price int) (model.PrivilegeInfo, error)
 }
 
 type Services struct {

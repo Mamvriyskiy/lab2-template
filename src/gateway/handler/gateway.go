@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 
 	modelGateway "github.com/Mamvriyskiy/lab2-template/src/gateway/model"
 	"github.com/gin-gonic/gin"
 )
-
 
 func forwardRequest(c *gin.Context, method, targetURL string, headers map[string]string, body []byte) (int, []byte, http.Header, error) {
 	if len(c.Request.URL.RawQuery) > 0 {
@@ -268,7 +269,7 @@ func (h *Handler) GetInfoAboutUser(c *gin.Context) {
 
 	var bonus modelGateway.PrivilegeResponse
 	if err := json.Unmarshal(BonusBody, &bonus); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse bonus response"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -281,11 +282,32 @@ func (h *Handler) GetInfoAboutUser(c *gin.Context) {
 }
 
 type BuyTicket struct {
-    FlightNumber    string `json:"flightNumber"`
-    Price           int    `json:"price"`
-    PaidFromBalance bool   `json:"paidFromBalance"`
+	FlightNumber    string `json:"flightNumber"`
+	Price           int    `json:"price"`
+	PaidFromBalance bool   `json:"paidFromBalance"`
 }
 
+type TicketResponse struct {
+	TicketUID     string `json:"ticketUid"`
+	FlightNumber  string `json:"flightNumber"`
+	FromAirport   string `json:"fromAirport"`
+	ToAirport     string `json:"toAirport"`
+	Date          string `json:"date"` // Можно оставить string, если нужен формат "YYYY-MM-DD HH:MM"
+	Price         int    `json:"price"`
+	PaidByMoney   int    `json:"paidByMoney"`
+	PaidByBonuses int    `json:"paidByBonuses"`
+	Status        string `json:"status"`
+	Privilege     struct {
+		Balance int    `json:"balance"`
+		Status  string `json:"status"`
+	} `json:"privilege"`
+}
+
+type PrivilegeInfo struct {
+	Status      string `db:"status"`
+	Balance     int    `db:"balance"`
+	BalanceDiff int    `db:"balance_diff"`
+}
 
 func (h *Handler) BuyTicketUser(c *gin.Context) {
 	username := c.GetHeader("X-User-Name")
@@ -304,32 +326,50 @@ func (h *Handler) BuyTicketUser(c *gin.Context) {
 
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	// Получаем данные с бонусного счета
-	statusBonus, bodyBonus, respHeaders, err := forwardRequest(c, "POST", "http://localhost:8070/bonus", headers, nil)
-	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
-		return
-	}
-
-
-
-
-
-	// Покупаем билет
-	status, body, respHeaders, err := forwardRequest(c, "POST", "http://localhost:8070/ticket", headers, bodyBytes)
-	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
-		return
-	}
-
 	// Получаем информацию о рейсе
 	var reqData struct {
-		FlightNumber string `json:"flightNumber"`
+		FlightNumber    string `json:"flightNumber"`
+		Price           int    `json:"price"`
+		PaidFromBalance bool   `json:"paidFromBalance"`
 	}
 
 	if err := json.Unmarshal(bodyBytes, &reqData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Покупаем билет
+	status, body, _, err := forwardRequest(c, "POST", "http://localhost:8070/ticket", headers, bodyBytes)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+	uid := strings.TrimSpace(string(body))
+
+	var privilege = PrivilegeInfo{
+		Status      : "GOLD",
+		Balance     : 1500,
+		BalanceDiff : 0,
+	}
+
+	if reqData.PaidFromBalance {
+		curlBouns := "http://localhost:8050/bonus/" + uid + "/" + strconv.Itoa(reqData.Price)
+		// Получаем данные с бонусного счета
+		statusBonus, bodyBonus, _, err := forwardRequest(c, "PATCH", curlBouns, headers, nil)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+			return
+		}
+
+		if statusBonus != http.StatusOK {
+			c.Status(statusBonus)
+			return
+		}
+
+		if err := json.Unmarshal(bodyBonus, &privilege); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	flightNumber := reqData.FlightNumber
@@ -352,10 +392,34 @@ func (h *Handler) BuyTicketUser(c *gin.Context) {
 		return
 	}
 
+	var paidByBonuses int
+	if reqData.PaidFromBalance {
+		paidByBonuses = privilege.BalanceDiff
+	}
 
-	c.Data(status, respHeaders.Get("Content-Type"), body)
+	resultUID := strings.Trim(uid, `"\n\r `)
+
+	result := TicketResponse{
+		TicketUID:     resultUID,
+		FlightNumber:  flight.FlightNumber,
+		FromAirport:   flight.FromAirport,
+		ToAirport:     flight.ToAirport,
+		Date:          flight.Datetime,
+		Price:         reqData.Price,
+		PaidByMoney:   flight.Price - paidByBonuses,
+		PaidByBonuses: paidByBonuses,
+		Status:        "PAID",
+		Privilege: struct {
+			Balance int    `json:"balance"`
+			Status  string `json:"status"`
+		}{
+			Balance: privilege.Balance,
+			Status:  privilege.Status,
+		},
+	}
+
+	c.JSON(status, result)
 }
-
 
 func (h *Handler) DeleteTicketUSer(c *gin.Context) {
 	ticketUid := c.Param("ticketUid")

@@ -1,8 +1,8 @@
 package services
 
 import (
-	repository "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
 	model "github.com/Mamvriyskiy/lab2-template/src/bonus/model"
+	repository "github.com/Mamvriyskiy/lab2-template/src/bonus/repository"
 )
 
 type BonusService struct {
@@ -17,6 +17,6 @@ func (s *BonusService) GetInfoAboutUserPrivilege(username string) (model.Privile
 	return s.repo.GetInfoAboutUserPrivilege(username)
 }
 
-func (s *BonusService) UpdateBonus(username, ticketUid string) error {
-	return s.repo.UpdateBonus(username, ticketUid)
+func (s *BonusService) UpdateBonus(username, ticketUID string, price int) (model.PrivilegeInfo, error) {
+	return s.repo.UpdateBonus(username, ticketUID, price)
 }
