@@ -61,4 +61,6 @@ jobs:
       - name: Stop containers
         if: always()
         continue-on-error: true
-        run: docker compose down -v
+        run: 
+          docker compose logs --no-color
+          docker compose down -v
