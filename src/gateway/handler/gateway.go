@@ -50,7 +50,7 @@ func forwardRequest(c *gin.Context, method, targetURL string, headers map[string
 func (h *Handler) GetInfoAboutFlight(c *gin.Context) {
 	status, body, headers, err := forwardRequest(c, "GET", "http://flight:8060/flight", nil, nil)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
