@@ -21,9 +21,9 @@ func (r *FlightPostgres) GetInfoAboutFlightByFlightNumber(flightNumber string) (
 	query := `
 		SELECT 
 			f.flight_number,
-			af.name || ' ' || af.city AS from_airport,
-			at.name || ' ' || at.city AS to_airport,
-			TO_CHAR(f.datetime, 'YYYY-MM-DD HH24:MI') AS date,
+			af.city || ' ' || af.name AS from_airport,
+			at.city || ' ' || at.name AS to_airport,
+			f.datetime,
 			f.price
 		FROM flight f
 		JOIN airport af ON f.from_airport_id = af.id
@@ -31,14 +31,19 @@ func (r *FlightPostgres) GetInfoAboutFlightByFlightNumber(flightNumber string) (
 		WHERE f.flight_number = $1
 	`
 
+	var dt time.Time
 	row := r.db.QueryRow(query, flightNumber)
 	err := row.Scan(
 		&flight.FlightNumber,
 		&flight.FromAirport,
 		&flight.ToAirport,
-		&flight.Datetime,
+		&dt,
 		&flight.Price,
 	)
+
+	loc, _ := time.LoadLocation("Europe/Moscow")
+	flight.Datetime = dt.In(loc).Format("2006-01-02 15:04")
+
 	if err != nil {
 		return model.Flight{}, err
 	}
@@ -55,6 +60,8 @@ func (r *FlightPostgres) GetFlights(page, size int) (model.FlightResponse, error
             f.flight_number,
             a_from.name AS from_airport,
             a_to.name AS to_airport,
+			a_from.city as from_city,
+			a_to.city AS to_city,
             f.datetime,
             f.price
         FROM flight f
@@ -71,10 +78,16 @@ func (r *FlightPostgres) GetFlights(page, size int) (model.FlightResponse, error
 	for rows.Next() {
 		var item model.FlightItem
 		var dt time.Time
-		if err := rows.Scan(&item.FlightNumber, &item.FromAirport, &item.ToAirport, &dt, &item.Price); err != nil {
+		var from_airport, to_airport, from_city, to_city string
+		if err := rows.Scan(&item.FlightNumber, &from_airport, &to_airport, &from_city, &to_city, &dt, &item.Price); err != nil {
 			return model.FlightResponse{}, err
 		}
-		item.Date = dt.Format("2006-01-02 15:04")
+		item.FromAirport = from_city + " " + from_airport
+		item.ToAirport = to_city + " " + to_airport
+
+		loc, _ := time.LoadLocation("Europe/Moscow")
+		item.Date = dt.In(loc).Format("2006-01-02 15:04")
+
 		items = append(items, item)
 	}
 
@@ -86,7 +99,7 @@ func (r *FlightPostgres) GetFlights(page, size int) (model.FlightResponse, error
 
 	return model.FlightResponse{
 		Page:          page,
-		PageSize:      size,
+		PageSize:      len(items),
 		TotalElements: total,
 		Items:         items,
 	}, nil

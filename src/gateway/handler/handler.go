@@ -24,7 +24,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	flight := router.Group("api/v1/")
 
 	// Получить список всех перелетов
-	flight.GET("/flight", h.GetInfoAboutFlight)
+	flight.GET("/flights", h.GetInfoAboutFlight)
 
 	// Возвращается информация о билетах и статусе в системе привилегии
 	flight.GET("/me", h.GetInfoAboutUser)
@@ -33,10 +33,10 @@ func (h *Handler) InitRouters() *gin.Engine {
 	flight.GET("/tickets", h.GetInfoAboutAllUserTickets)
 
 	// Получить информацию о конкретном билете пользователя
-	flight.GET("/ticket/:ticketUid", h.GetInfoAboutUserTicket)
+	flight.GET("/tickets/:ticketUid", h.GetInfoAboutUserTicket)
 
 	// Покупка билета
-	flight.POST("/tickets/:ticketUid", h.BuyTicketUSer)
+	flight.POST("/tickets", h.BuyTicketUser)
 
 	// Возврат билета
 	flight.DELETE("/tickets/:ticketUid", h.DeleteTicketUSer)

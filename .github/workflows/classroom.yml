@@ -23,14 +23,10 @@ jobs:
         timeout-minutes: 10
         run: |
           docker compose build
+          
       - name: Debug DB variables
         run: |
-          echo "DB_HOST=$DB_HOST"
-          echo "DB_PORT=$DB_PORT"
-          echo "DB_NAME=$DB_NAME"
-          echo "DB_USERNAME=$DB_USERNAME"
-          echo "DB_SSLMODE=$DB_SSLMODE"
-          echo "WAIT_PORTS=$WAIT_PORTS"
+          echo ""
         env:
           DB_HOST: ${{ vars.DB_HOST }}
           DB_PORT: ${{ vars.DB_PORT }}

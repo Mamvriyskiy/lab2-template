@@ -57,9 +57,9 @@ func (h *Handler) GetInfoAboutTikets(c *gin.Context) {
 }
 
 type BuyTicket struct {
-	FlightNumber    string
-	Price           int
-	PaidFromBalance bool
+    FlightNumber    string `json:"flightNumber"`
+    Price           int    `json:"price"`
+    PaidFromBalance bool   `json:"paidFromBalance"`
 }
 
 func (h *Handler) CreateTicket(c *gin.Context) {
@@ -71,7 +71,7 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 
     var buyTicket BuyTicket
 	if err := c.BindJSON(&buyTicket); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Body is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

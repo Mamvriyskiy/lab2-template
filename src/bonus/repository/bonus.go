@@ -30,7 +30,7 @@ func (r *BonusPostgres) GetInfoAboutUserPrivilege(username string) (model.Privil
 	}
 
 	rows, err := r.db.Query(`
-        SELECT datetime, balance_diff, operation_type
+        SELECT datetime, ticket_uid, balance_diff, operation_type
         FROM privilege_history
         WHERE privilege_id = $1
         ORDER BY datetime DESC
@@ -43,10 +43,11 @@ func (r *BonusPostgres) GetInfoAboutUserPrivilege(username string) (model.Privil
 	for rows.Next() {
 		var item model.HistoryItem
 		var dt time.Time
-		if err := rows.Scan(&dt, &item.BalanceDiff, &item.OperationType); err != nil {
+		if err := rows.Scan(&dt, &item.TicketUid, &item.BalanceDiff, &item.OperationType); err != nil {
 			return resp, err
 		}
 		item.Date = dt.Format(time.RFC3339)
+	
 		resp.History = append(resp.History, item)
 	}
 
