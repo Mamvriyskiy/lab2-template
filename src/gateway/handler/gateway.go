@@ -198,7 +198,7 @@ func (h *Handler) GetInfoAboutUserPrivilege(c *gin.Context) {
 type CombinedResponse struct {
 	Tickets   []modelGateway.TicketInfo `json:"tickets"`
 	Privilege struct {
-		Balance string `json:"balance"`
+		Balance int `json:"balance"`
 		Status  string `json:"status"`
 	} `json:"privilege"`
 }
